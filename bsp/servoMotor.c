@@ -25,7 +25,7 @@ unsigned char crc_chk(unsigned char *data,unsigned char length){
 	}else{
 		return 0;
 	}
-}
+} 
 
 unsigned char servo_transmission(unsigned char *cmd,unsigned int cmd_length,unsigned int *result){
 	unsigned char status = 1; //未收到消息
