@@ -33,7 +33,7 @@ void TIM2_IRQHandler(void)   //10us
 		{
 			uart1_receive_timecount++;
 		}
-		if(uart1_receive_timecount >= 30) // uart receive frame timeout(300us)
+		if(uart1_receive_timecount >= 300) // uart receive frame timeout(3000us)
 		{
 			uart1_receive_timecount = 0;
 			uart1_receive_timerstart = 0;

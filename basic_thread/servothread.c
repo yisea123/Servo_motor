@@ -14,9 +14,9 @@ int Init_servo_thread() {
 }
 
 void servo_thread(void const *argument) {
+	servoStatus status;
 	uart1_current_send_thread_id = servo_thread_id;
-	jog_enable(1);
-	jog_forward_run(1);
+	status = servoMototInit(1);
   while(1) 
 	{
 

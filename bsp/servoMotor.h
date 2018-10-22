@@ -70,5 +70,8 @@ servoStatus jog_inversion_stop(uint8_t ctr_addr);
 servoStatus jog_speed_set(uint8_t ctr_addr,uint16_t speed);
 servoStatus jog_run_acceleration_time_set(uint8_t ctr_addr,uint16_t time);
 servoStatus jog_stop_acceleration_time_set(uint8_t ctr_addr,uint16_t time);
-	
+//******************************************************************//
+//≥ı ºªØ
+servoStatus servoMototInit(uint8_t ctr_addr);
+//******************************************************************//
 #endif

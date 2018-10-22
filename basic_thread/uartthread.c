@@ -3,11 +3,11 @@
 //*************************************************************************************************************//
 #ifdef USE_UART1
 osPoolId  uart1_send_mpool;
-osPoolDef(uart1_send_mpool, 1, uart_send_msg_t);																		//define memory pool
+osPoolDef(uart1_send_mpool, 2, uart_send_msg_t);																		//define memory pool
 osMessageQId  uart1_send_queue;
 osMessageQDef(uart1_send_queue, 1, uart_send_msg_t);															//define message queue
 osPoolId  uart1_receive_mpool;
-osPoolDef(uart1_receive_mpool, 1, uart_receive_msg_t);																		//define memory pool
+osPoolDef(uart1_receive_mpool, 2, uart_receive_msg_t);																		//define memory pool
 osMessageQId  uart1_receive_queue;
 osMessageQDef(uart1_receive_queue, 1, uart_receive_msg_t);															//define message queue
 osThreadId uart1_send_thread_id;                                          // thread id
@@ -16,7 +16,7 @@ osThreadId uart1_current_send_thread_id;
 
 uint8_t uart1_frame_start=1;
 uint8_t uart1_receive_timerstart = 0;
-uint8_t uart1_receive_timecount = 0;
+uint16_t uart1_receive_timecount = 0;
 uint8_t uart1_receive_overtime = 0;
 uint16_t uart1_receive_datacount=0;
 #endif

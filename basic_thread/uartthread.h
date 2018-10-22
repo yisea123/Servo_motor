@@ -26,7 +26,7 @@ extern osThreadId uart1_current_send_thread_id;
 
 extern uint8_t uart1_frame_start;
 extern uint8_t uart1_receive_timerstart;
-extern uint8_t uart1_receive_timecount;
+extern uint16_t uart1_receive_timecount;
 extern uint8_t uart1_receive_overtime;
 extern uint16_t uart1_receive_datacount;
 #endif

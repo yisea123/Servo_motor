@@ -19,7 +19,7 @@ uint16_t crc_gen(uint8_t *data,uint8_t length){
 
 servoStatus crc_chk(uint8_t *data,uint8_t length){
 	uint16_t crc_gen_result;
-	uint16_t data_crc_result = *(data+length-2) + *(data+length-1)*0xff;
+	uint16_t data_crc_result = *(data+length-2) + *(data+length-1)*256;
 	crc_gen_result = crc_gen(data,length-2);
 	if(data_crc_result == crc_gen_result){
 		return OK;
@@ -41,11 +41,11 @@ servoStatus servo_transmission(uint8_t *cmd,uint16_t cmd_length,uint16_t *result
 	if (evt.status == osEventMessage) {											
 		uart_receive_msg_t *uart_receive_msg = (uart_receive_msg_t*)evt.value.p;
 		if(uart_receive_msg->Datanum > 2){
-			if(crc_chk(uart_receive_msg->Datas,uart_receive_msg->Datanum)){
+			if(crc_chk(uart_receive_msg->Datas,uart_receive_msg->Datanum) == OK){
 				switch(uart_receive_msg->Datas[1]){
 					case 0x03: //读成功
 						status = OK;
-						*result = uart_receive_msg->Datas[3] + uart_receive_msg->Datas[4]*0xff; //读取的一个字
+						*result = uart_receive_msg->Datas[3] + uart_receive_msg->Datas[4]*256; //读取的一个字
 						break;
 					case 0x06: //写成功
 						status = OK;
@@ -388,6 +388,18 @@ servoStatus jog_stop_acceleration_time_set(uint8_t ctr_addr,uint16_t time){
 	if(time > 10000) return PARAM_ERR;
 	return write_word(ctr_addr,PN306,time); //time:ms
 }
-
+//******************************************************************//
+//servoMotot初始化
+servoStatus servoMototInit(uint8_t ctr_addr){
+	servoStatus status;
+	status = set_servo_pmode(ctr_addr);
+	status = set_servo_forward_run(ctr_addr);
+	status = clear_remain_plus(ctr_addr);
+	status = initJPO(ctr_addr);
+	status = servo_on(ctr_addr);
+	status = get_servo_srdy(ctr_addr);
+	return status;
+}
+//******************************************************************//
 
 
