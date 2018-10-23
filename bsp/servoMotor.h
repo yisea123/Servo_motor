@@ -7,6 +7,8 @@
 
 typedef enum servoStatus{
 	OK, //状态正常
+	IO_ON, //IO开
+	IO_OFF, //IO关
 	PARAM_ERR, //参数错误
 	CRC_CHECK_ERR, //CRC校验失败（帧错误）
 	TRANSMISSION_ERR, //传输错误（未收到回复消息）
@@ -35,6 +37,33 @@ servoStatus set_servo_forward_run(uint8_t ctr_addr);
 servoStatus set_servo_inversion_run(uint8_t ctr_addr);
 //******************************************************************//
 //控制器输入IO操作
+servoStatus enable_io_control(uint8_t ctr_addr);
+servoStatus disable_io_control(uint8_t ctr_addr);
+servoStatus set_SON_pin(uint8_t ctr_addr);
+servoStatus set_PCON_pin(uint8_t ctr_addr);
+servoStatus set_POT_pin(uint8_t ctr_addr);
+servoStatus set_NOT_pin(uint8_t ctr_addr);
+servoStatus set_ALMRST_pin(uint8_t ctr_addr);
+servoStatus set_CLR_pin(uint8_t ctr_addr);
+servoStatus set_PCL_pin(uint8_t ctr_addr);
+servoStatus set_NCL_pin(uint8_t ctr_addr);
+servoStatus reset_SON_pin(uint8_t ctr_addr);
+servoStatus reset_PCON_pin(uint8_t ctr_addr);
+servoStatus reset_POT_pin(uint8_t ctr_addr);
+servoStatus reset_NOT_pin(uint8_t ctr_addr);
+servoStatus reset_ALMRST_pin(uint8_t ctr_addr);
+servoStatus reset_CLR_pin(uint8_t ctr_addr);
+servoStatus reset_PCL_pin(uint8_t ctr_addr);
+servoStatus reset_NCL_pin(uint8_t ctr_addr);
+uint16_t read_IO_status(uint8_t ctr_addr);
+servoStatus get_SON_pin(uint8_t ctr_addr);
+servoStatus get_PCON_pin(uint8_t ctr_addr);
+servoStatus get_POT_pin(uint8_t ctr_addr);
+servoStatus get_NOT_pin(uint8_t ctr_addr);
+servoStatus get_ALMRST_pin(uint8_t ctr_addr);
+servoStatus get_CLR_pin(uint8_t ctr_addr);
+servoStatus get_PCL_pin(uint8_t ctr_addr);
+servoStatus get_NCL_pin(uint8_t ctr_addr);
 servoStatus servo_on(uint8_t ctr_addr);
 servoStatus servo_off(uint8_t ctr_addr);
 servoStatus alarm_reset(uint8_t ctr_addr);
@@ -72,6 +101,7 @@ servoStatus jog_run_acceleration_time_set(uint8_t ctr_addr,uint16_t time);
 servoStatus jog_stop_acceleration_time_set(uint8_t ctr_addr,uint16_t time);
 //******************************************************************//
 //初始化
-servoStatus servoMototInit(uint8_t ctr_addr);
+servoStatus servoMotorInit(uint8_t ctr_addr);
+servoStatus setJPO(uint8_t ctr_addr);
 //******************************************************************//
 #endif

@@ -3,7 +3,7 @@
 void servo_thread(void const *argument);                             // thread function
 
 osThreadId servo_thread_id;                                          // thread id
-osThreadDef (servo_thread, osPriorityNormal, 1, 0);                   // thread object
+osThreadDef (servo_thread, osPriorityNormal, 1, 512);                   // thread object
 
 int Init_servo_thread() {
 
@@ -16,7 +16,13 @@ int Init_servo_thread() {
 void servo_thread(void const *argument) {
 	servoStatus status;
 	uart1_current_send_thread_id = servo_thread_id;
-	status = servoMototInit(1);
+	//status = servo_off(1);
+	//status = servoMotorInit(1);
+	//status = setJPO(1);
+	//jog_disable(1);	
+	//jog_enable(1);
+	//jog_forward_run(1);
+	
   while(1) 
 	{
 

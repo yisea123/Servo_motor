@@ -37,6 +37,7 @@ servoStatus servo_transmission(uint8_t *cmd,uint16_t cmd_length,uint16_t *result
 	uart_send_msg->Datas = cmd;
 	osMessagePut(uart1_send_queue, (uint32_t)uart_send_msg, osWaitForever);			
 	osSignalWait(UART_SEND_FINISH_SIGNAL,osWaitForever);	
+	osPoolFree(uart1_send_mpool, uart_send_msg);	//Release the buffer
 	evt = osMessageGet(uart1_receive_queue, 500);					
 	if (evt.status == osEventMessage) {											
 		uart_receive_msg_t *uart_receive_msg = (uart_receive_msg_t*)evt.value.p;
@@ -45,7 +46,7 @@ servoStatus servo_transmission(uint8_t *cmd,uint16_t cmd_length,uint16_t *result
 				switch(uart_receive_msg->Datas[1]){
 					case 0x03: //读成功
 						status = OK;
-						*result = uart_receive_msg->Datas[3] + uart_receive_msg->Datas[4]*256; //读取的一个字
+						*result = (uart_receive_msg->Datas[3] & 0xff) * 256 + uart_receive_msg->Datas[4]; //读取的一个字
 						break;
 					case 0x06: //写成功
 						status = OK;
@@ -152,7 +153,7 @@ servoStatus position_teaching_set_low(uint8_t ctr_addr,uint16_t lowbytes){
 servoStatus set_servo_pmode(uint8_t ctr_addr){
 	uint16_t temp = read_word(ctr_addr,PN000);
 	if(temp != 0xffff){
-		temp &= 0xff0f;
+		temp &= 0x0f0f;
 		return write_word(ctr_addr,PN000,temp |= 0X00C0);
 	}else{
 		return REG_READ_ERR;
@@ -181,20 +182,287 @@ servoStatus set_servo_inversion_run(uint8_t ctr_addr){
 
 //******************************************************************//
 //控制器输入IO操作
+//使能总线IO控制
+servoStatus enable_io_control(uint8_t ctr_addr){
+	servoStatus status;
+	status = write_word(ctr_addr,PN512,0x000f);
+	if(status != OK) return status;
+	status = write_word(ctr_addr,PN513,0x000f);
+	return status;
+}
+//失能总线IO控制
+servoStatus disable_io_control(uint8_t ctr_addr){
+	servoStatus status;
+	status = write_word(ctr_addr,PN512,0x0000);
+	if(status != OK) return status;
+	status = write_word(ctr_addr,PN513,0x0000);
+	return status;
+}
+servoStatus set_SON_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0001;
+		return write_word(ctr_addr,PN516,temp |= 0X0001);
+	}else{
+		return REG_READ_ERR;
+	}
+}
+servoStatus reset_SON_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0001;
+		return write_word(ctr_addr,PN516,temp);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus set_PCON_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0002;
+		return write_word(ctr_addr,PN516,temp |= 0X0002);
+	}else{
+		return REG_READ_ERR;
+	}
+}
+servoStatus reset_PCON_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0002;
+		return write_word(ctr_addr,PN516,temp);
+	}else{
+		return REG_READ_ERR;
+	}		
+}
+servoStatus set_POT_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0004;
+		return write_word(ctr_addr,PN516,temp |= 0X0004);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus reset_POT_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0004;
+		return write_word(ctr_addr,PN516,temp);
+	}else{
+		return REG_READ_ERR;
+	}			
+}
+servoStatus set_NOT_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0008;
+		return write_word(ctr_addr,PN516,temp |= 0X0008);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus reset_NOT_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN516);
+	if(temp != 0xffff){
+		temp &= ~0X0008;
+		return write_word(ctr_addr,PN516,temp);
+	}else{
+		return REG_READ_ERR;
+	}			
+}
+servoStatus set_ALMRST_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= ~0X0001;
+		return write_word(ctr_addr,PN517,temp |= 0X0001);
+	}else{
+		return REG_READ_ERR;
+	}		
+}
+servoStatus reset_ALMRST_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= ~0X0001;
+		return write_word(ctr_addr,PN517,temp);
+	}else{
+		return REG_READ_ERR;
+	}		
+}
+servoStatus set_CLR_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= ~0X0002;
+		return write_word(ctr_addr,PN517,temp |= 0X0002);
+	}else{
+		return REG_READ_ERR;
+	}		
+}
+servoStatus reset_CLR_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= ~0X0002;
+		return write_word(ctr_addr,PN517,temp);
+	}else{
+		return REG_READ_ERR;
+	}		
+}
+servoStatus set_PCL_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= 0X0004;
+		return write_word(ctr_addr,PN517,temp |= 0X0004);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus reset_PCL_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= 0X0004;
+		return write_word(ctr_addr,PN517,temp);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus set_NCL_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= ~0X0008;
+		return write_word(ctr_addr,PN517,temp |= 0X0008);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus reset_NCL_pin(uint8_t ctr_addr){
+	uint16_t temp = read_word(ctr_addr,PN517);
+	if(temp != 0xffff){
+		temp &= ~0X0008;
+		return write_word(ctr_addr,PN517,temp);
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+uint16_t read_IO_status(uint8_t ctr_addr){
+	return read_word(ctr_addr,UN005);
+}
+servoStatus get_SON_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0001;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_PCON_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0002;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_POT_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0004;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_NOT_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0008;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_ALMRST_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0010;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_CLR_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0020;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_PCL_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0040;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
+servoStatus get_NCL_pin(uint8_t ctr_addr){
+	uint16_t status = read_IO_status(ctr_addr);
+	if(status != 0xffff){
+		status &= 0x0080;
+		if(status){
+			return IO_ON;
+		}else{
+			return IO_OFF;
+		}
+	}else{
+		return REG_READ_ERR;
+	}	
+}
 //伺服使能
 servoStatus servo_on(uint8_t ctr_addr){
-	return write_word(ctr_addr,PN512,0X01);
+	return set_SON_pin(ctr_addr);
 }
 //伺服不使能
 servoStatus servo_off(uint8_t ctr_addr){
-	return write_word(ctr_addr,PN512,0X00);
+	return reset_SON_pin(ctr_addr);
 }
 //报警清除ALMRST
 servoStatus alarm_reset(uint8_t ctr_addr){
 	servoStatus status;
-	status = write_word(ctr_addr,PN513,0X01);
+	status = set_ALMRST_pin(ctr_addr);
 	if(status == OK){
-		return write_word(ctr_addr,PN513,0X00);
+		return reset_ALMRST_pin(ctr_addr);
 	}else{
 		return REG_WRITE_ERR;
 	}
@@ -202,9 +470,9 @@ servoStatus alarm_reset(uint8_t ctr_addr){
 //位置偏差脉冲清除CLR
 servoStatus clear_remain_plus(uint8_t ctr_addr){
 	servoStatus status;
-	status = write_word(ctr_addr,PN513,0X02);
+	status = set_CLR_pin(ctr_addr);
 	if(status == OK){
-		return write_word(ctr_addr,PN513,0X00);
+		return reset_CLR_pin(ctr_addr);
 	}else{
 		return REG_WRITE_ERR;
 	}
@@ -389,15 +657,42 @@ servoStatus jog_stop_acceleration_time_set(uint8_t ctr_addr,uint16_t time){
 	return write_word(ctr_addr,PN306,time); //time:ms
 }
 //******************************************************************//
-//servoMotot初始化
-servoStatus servoMototInit(uint8_t ctr_addr){
+//servoMotor初始化
+servoStatus servoMotorInit(uint8_t ctr_addr){
 	servoStatus status;
 	status = set_servo_pmode(ctr_addr);
+	status = set_servo_pmode(ctr_addr);
 	status = set_servo_forward_run(ctr_addr);
+	status = enable_io_control(ctr_addr);
 	status = clear_remain_plus(ctr_addr);
-	status = initJPO(ctr_addr);
+	status = alarm_reset(ctr_addr);
+	status = clear_encoder_alarm(ctr_addr);
+	status = clear_encoder_multi(ctr_addr);
 	status = servo_on(ctr_addr);
 	status = get_servo_srdy(ctr_addr);
+	return status;
+}
+
+servoStatus setJPO(uint8_t ctr_addr){
+	servoStatus status;
+	status = initJPO(ctr_addr);
+	status = setJPO_increment_mode(ctr_addr);
+	
+	status = setJPO_pluse_num(ctr_addr,0,0,10);
+	status = setJPO_speed(ctr_addr,0,2000);
+	status = setJPO_filter_time(ctr_addr,0,5);
+	status = setJPO_stop_time(ctr_addr,0,50);
+	
+	status = setJPO_pluse_num(ctr_addr,1,0,100);
+	status = setJPO_speed(ctr_addr,1,2000);
+	status = setJPO_filter_time(ctr_addr,1,5);
+	status = setJPO_stop_time(ctr_addr,1,50);	
+	
+	status = setJPO_start_point(ctr_addr,0);
+	status = setJPO_stop_point(ctr_addr,1);
+	
+	status = set_PCL_pin(ctr_addr);
+
 	return status;
 }
 //******************************************************************//
