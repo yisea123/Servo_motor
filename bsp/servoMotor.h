@@ -39,6 +39,8 @@ servoStatus set_servo_inversion_run(uint8_t ctr_addr);
 //¿ØÖÆÆ÷ÊäÈëIO²Ù×÷
 servoStatus enable_io_control(uint8_t ctr_addr);
 servoStatus disable_io_control(uint8_t ctr_addr);
+servoStatus set_all_pin(uint8_t ctr_addr);
+servoStatus reset_all_pin(uint8_t ctr_addr);
 servoStatus set_SON_pin(uint8_t ctr_addr);
 servoStatus set_PCON_pin(uint8_t ctr_addr);
 servoStatus set_POT_pin(uint8_t ctr_addr);

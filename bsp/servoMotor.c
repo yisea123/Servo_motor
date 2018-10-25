@@ -198,6 +198,18 @@ servoStatus disable_io_control(uint8_t ctr_addr){
 	status = write_word(ctr_addr,PN513,0x0000);
 	return status;
 }
+servoStatus set_all_pin(uint8_t ctr_addr){
+	servoStatus status;
+	status = write_word(ctr_addr,PN516,0X000f);
+	if(status != OK) return status;
+	return write_word(ctr_addr,PN517,0X000f);
+}
+servoStatus reset_all_pin(uint8_t ctr_addr){
+	servoStatus status;
+	status = write_word(ctr_addr,PN516,0X0000);
+	if(status != OK) return status;
+	return write_word(ctr_addr,PN517,0X0000);
+}
 servoStatus set_SON_pin(uint8_t ctr_addr){
 	uint16_t temp = read_word(ctr_addr,PN516);
 	if(temp != 0xffff){
@@ -558,6 +570,7 @@ uint16_t get_current_alarm_info(uint8_t ctr_addr){
 //换步输入信号脉冲方式
 servoStatus initJPO(uint8_t ctr_addr){
 	return write_word(ctr_addr,PN681,0x0131);
+	//return write_word(ctr_addr,PN681,0x0000);
 }
 //设置编程方式为增量模式
 servoStatus setJPO_increment_mode(uint8_t ctr_addr){
@@ -661,6 +674,7 @@ servoStatus jog_stop_acceleration_time_set(uint8_t ctr_addr,uint16_t time){
 servoStatus servoMotorInit(uint8_t ctr_addr){
 	servoStatus status;
 	status = set_servo_pmode(ctr_addr);
+	status = reset_all_pin(ctr_addr);
 	status = set_servo_pmode(ctr_addr);
 	status = set_servo_forward_run(ctr_addr);
 	status = enable_io_control(ctr_addr);
@@ -675,8 +689,7 @@ servoStatus servoMotorInit(uint8_t ctr_addr){
 
 servoStatus setJPO(uint8_t ctr_addr){
 	servoStatus status;
-	status = initJPO(ctr_addr);
-	status = setJPO_increment_mode(ctr_addr);
+	status = setJPO_absolute_mode(ctr_addr);
 	
 	status = setJPO_pluse_num(ctr_addr,0,0,10);
 	status = setJPO_speed(ctr_addr,0,2000);
@@ -691,7 +704,11 @@ servoStatus setJPO(uint8_t ctr_addr){
 	status = setJPO_start_point(ctr_addr,0);
 	status = setJPO_stop_point(ctr_addr,1);
 	
+	status = initJPO(ctr_addr);
+	status = reset_POT_pin(ctr_addr);
+	status = reset_NOT_pin(ctr_addr);
 	status = set_PCL_pin(ctr_addr);
+	status = set_PCON_pin(ctr_addr);
 
 	return status;
 }
